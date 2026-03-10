@@ -52,8 +52,8 @@ ai2d_project/
 
 1. Chuẩn bị Dữ liệu: 
 Cần tải xuống bộ dữ liệu gốc để đưa vào thư mục data/:
-- AI2D Dataset: Allen Institute for AI - AI2D
-- AI2D-RST: Cấu trúc phân đoạn RST cho AI2D
+- AI2D Dataset: https://www.kaggle.com/datasets/nhtanhnguyn0029/ai2d-zip
+- AI2D-RST: https://github.com/thiippal/AI2D-RST
 
 2. Cài đặt môi trường: 
 - git clone https://github.com/NguyenHoangHieu-ue/ai2d_project.git
