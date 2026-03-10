@@ -25,7 +25,7 @@ Hệ thống vận hành qua 3 tầng chính:
 - Cloud Storage: Cloudflare R2 (Image hosting).
 
 ##  Cấu trúc thư mục
-- ai2d_project/
+ai2d_project/
 - ├── app/
 - │   ├── api/
 - │   │   ├── __init__.py
@@ -57,7 +57,7 @@ Hệ thống vận hành qua 3 tầng chính:
 Cần tải xuống bộ dữ liệu gốc để đưa vào thư mục data/:
 - AI2D Dataset: Allen Institute for AI - AI2D
 - AI2D-RST: Cấu trúc phân đoạn RST cho AI2D
-- 
+
 2. Cài đặt môi trường: 
 - git clone https://github.com/NguyenHoangHieu-ue/ai2d_project.git
 - cd ai2d_project
@@ -77,11 +77,13 @@ Tạo file .env và điền các thông tin kết nối tới MongoDB, PostgreSQ
 - POSTGRES_PASSWORD=your_password
 - POSTGRES_DB=ai2d_db
 - R2_BASE_URL=your_r2_url
-4. Trình tự chạy Scripts xử lý dữ liệu
+
+4. Trình tự chạy Scripts xử lý dữ liệu:
 - Thiết lập ánh xạ: python -m app.scripts.01_setup_mapping (Tạo file quy tắc Biology).
 - Lọc dữ liệu: python -m app.scripts.update_filtered (Lọc các sơ đồ thuộc chủ đề mục tiêu).
 - Chuẩn hóa: python -m app.scripts.02_standardize (Chuyển đổi tọa độ thô sang Bbox).
 - Nạp Database: python -m app.scripts.seed_database (Xử lý đồ thị và đẩy vào 3 DB).
+
 5. Khởi chạy API:
   - uvicorn main:app --reload
    
