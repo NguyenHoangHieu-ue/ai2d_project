@@ -29,27 +29,27 @@ Hệ thống vận hành qua 3 tầng chính:
 - ├── app/
 - │   ├── api/
 - │   │   ├── __init__.py
-- │   │   └── endpoints.py         # Định nghĩa các API routes (Diagrams, Search, Graph)
+- │   │   └── endpoints.py                            # Định nghĩa các API routes (Diagrams, Search, Graph)
 - │   ├── core/
 - │   │   ├── __init__.py
-- │   │   ├── config.py            # Quản lý biến môi trường và cấu hình hệ thống
-- │   │   └── database.py          # Quản lý kết nối MongoDB, PostgreSQL, Neo4j
+- │   │   ├── config.py                               # Quản lý biến môi trường và cấu hình hệ thống
+- │   │   └── database.py                             # Quản lý kết nối MongoDB, PostgreSQL, Neo4j
 - │   ├── models/
 - │   │   ├── __init__.py
-- │   │   └── schemas.py           # Pydantic models cho dữ liệu API
+- │   │   └── schemas.py                              # Pydantic models cho dữ liệu API
 - │   ├── scripts/
-- │   │   ├── 01_setup_mapping.py  # Tạo file Excel quy tắc ánh xạ (Biology_Mapping_Rules.xlsx)
-- │   │   ├── 02_standardize.py    # Chuẩn hóa tọa độ Polygon sang Bounding Box
-- │   │   ├── process_graph.py     # Logic xử lý đồ thị, RST mapping và Topological Sort
-- │   │   ├── seed_database.py     # Script chính để nạp dữ liệu hàng loạt vào DB
-- │   │   └── update_filtered.py   # Lọc danh sách ID sơ đồ theo Category mục tiêu
+- │   │   ├── 01_setup_mapping.py                     # Tạo file Excel quy tắc ánh xạ (Biology_Mapping_Rules.xlsx)
+- │   │   ├── 02_standardize.py                       # Chuẩn hóa tọa độ Polygon sang Bounding Box
+- │   │   ├── process_graph.py                        # Logic xử lý đồ thị, RST mapping và Topological Sort
+- │   │   ├── seed_database.py                        # Script chính để nạp dữ liệu hàng loạt vào DB
+- │   │   └── update_filtered.py                      # Lọc danh sách ID sơ đồ theo Category mục tiêu
 - │   ├── services/
 - │   │   ├── __init__.py
-- │   │   └── ingestion_service.py # Dịch vụ nạp dữ liệu đa tầng (Mongo, PG, Neo4j)
+- │   │   └── ingestion_service.py                    # Dịch vụ nạp dữ liệu đa tầng (Mongo, PG, Neo4j)
 - │   └── __init__.py
-- ├── data/                        # Chứa dữ liệu AI2D và AI2D-RST 
-- ├── main.py                      # Entry point khởi chạy server FastAPI
-- └── .env                         # Lưu trữ thông tin xác thực và URI Database
+- ├── data/                                           # Chứa dữ liệu AI2D và AI2D-RST 
+- ├── main.py                                         # Entry point khởi chạy server FastAPI
+- └── .env                                            # Lưu trữ thông tin xác thực và URI Database
 
 ## 🚀 Cài đặt và Sử dụng
 
