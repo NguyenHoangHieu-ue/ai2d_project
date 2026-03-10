@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+motor
+psycopg2-binary
+neo4j
+pandas
+openpyxl
+python-dotenv

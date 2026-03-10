@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+
+# Môi trường và Bảo mật
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Dữ liệu
+data/
+*.xlsx
+*.csv
+*.json
+*.html
+
+# Editor
+.vscode/
+.idea/
+
+note.txt
