@@ -25,28 +25,29 @@ Dự án được xây dựng dựa trên 3 tầng chính:
 - Cloud Storage: Cloudflare R2 (Image hosting).
 
 ## 📂 Cấu trúc thư mục
-ai2d_project/
-├── app/
-│   ├── api/            # Định nghĩa các API Endpoints
-│   ├── core/           # Cấu hình hệ thống và kết nối DB
-│   ├── models/         # Pydantic schemas cho dữ liệu
-│   ├── scripts/        # Các script tiền xử lý và nạp dữ liệu
-│   └── services/       # Logic nghiệp vụ (Ingestion Service)
-├── data/               # Thư mục chứa dữ liệu AI2D (đã được gitignore)
-├── main.py             # Entry point của ứng dụng
-└── .env                # Biến môi trường bảo mật
-🚀 Cài đặt và Sử dụng
+- ai2d_project/
+- ├── app/
+- │   ├── api/            # Định nghĩa các API Endpoints
+- │   ├── core/           # Cấu hình hệ thống và kết nối DB
+- │   ├── models/         # Pydantic schemas cho dữ liệu
+- │   ├── scripts/        # Các script tiền xử lý và nạp dữ liệu
+- │   └── services/       # Logic nghiệp vụ (Ingestion Service)
+- ├── data/               # Thư mục chứa dữ liệu AI2D (đã được gitignore)
+- ├── main.py             # Entry point của ứng dụng
+- └── .env                # Biến môi trường bảo mật
+
+## 🚀 Cài đặt và Sử dụng
 1. Clone dự án:
-  git clone https://github.com/NguyenHoangHieu-ue/ai2d_project.git
-  cd ai2d_project
+- git clone https://github.com/NguyenHoangHieu-ue/ai2d_project.git
+- cd ai2d_project
 2. Cài đặt môi trường:
-  python -m venv .venv
-  source .venv/bin/activate  # Windows: .venv\Scripts\activate
-  pip install -r requirements.txt
+- python -m venv .venv
+- source .venv/bin/activate  # Windows: .venv\Scripts\activate
+- pip install -r requirements.txt
 3. Cấu hình:
-   Tạo file .env và điền các thông tin kết nối tới MongoDB, PostgreSQL và Neo4j.
+  - Tạo file .env và điền các thông tin kết nối tới MongoDB, PostgreSQL và Neo4j.
 4. Chạy Pipeline nạp dữ liệu:
-   python -m app.scripts.seed_database
+  - python -m app.scripts.seed_database
 5. Khởi chạy API:
-   uvicorn main:app --reload
+  - uvicorn main:app --reload
    
