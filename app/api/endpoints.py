@@ -1,9 +1,19 @@
-from fastapi import APIRouter, Query, HTTPException
-from typing import Optional
+from fastapi import APIRouter, Query, HTTPException, Body
+from typing import Optional, Dict, Any
 from app.core.database import db
 from app.models.schemas import DiagramListResponse, DiagramDetailResponse, SearchResponse
+from app.services.ingestion_service import ingestion_service
 
 router = APIRouter()
+
+@router.post("/ingest/{image_id}")
+async def ingest_ai_detected_data(image_id: str, ai_json: Dict[str, Any] = Body(...)):
+    result = await ingestion_service.process_upload(
+        raw_json_content=ai_json,
+        image_id=image_id,
+        rst_content=None
+    )
+    return result
 
 @router.get("/diagrams", response_model=DiagramListResponse)
 async def get_diagrams(category: Optional[str] = Query(None, description="Loc theo chu de")):

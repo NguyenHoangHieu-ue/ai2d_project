@@ -78,28 +78,38 @@ class IngestionService:
         return desc + ", ".join(relations)
 
     def _standardize_wrapper(self, raw_data, image_id):
+        if 'visual_objects' in raw_data:
+            return {
+                "id": image_id,
+                "visual_objects": raw_data['visual_objects'],
+                "relationships": raw_data.get('relationships', [])
+            }
+
+        # Logic xử lý dành cho dữ liệu AI2D thô (cần tính toán lại tọa độ Bbox từ Polygon)
         visual_objects = {"blobs": {}, "texts": [], "arrows": {}}
 
+        # 1. Xử lý Blobs (Vùng đối tượng)
         blobs = raw_data.get('blobs', {})
-        if 'visual_objects' in raw_data: blobs = raw_data['visual_objects'].get('blobs', {})
         for k, v in blobs.items():
             visual_objects['blobs'][k] = {"id": k, "bbox": v.get('bbox', [0, 0, 0, 0])}
             if 'polygon' in v:
                 poly = v['polygon']
                 xs = [p[0] for p in poly]
                 ys = [p[1] for p in poly]
+                # Tính toán Bbox [x, y, w, h] từ danh sách các điểm polygon
                 visual_objects['blobs'][k]['bbox'] = [min(xs), min(ys), max(xs) - min(xs), max(ys) - min(ys)]
 
+        # 2. Xử lý Texts (Văn bản)
         texts = raw_data.get('text', {})
-        if 'visual_objects' in raw_data:
-            visual_objects['texts'] = raw_data['visual_objects'].get('texts', [])
-        else:
-            for k, v in texts.items():
-                visual_objects['texts'].append(
-                    {"id": k, "content": v.get('value', ''), "bbox": v.get('rectangle', [0, 0, 0, 0])})
+        for k, v in texts.items():
+            visual_objects['texts'].append({
+                "id": k,
+                "content": v.get('value', ''),
+                "bbox": v.get('rectangle', [0, 0, 0, 0])
+            })
 
+        # 3. Xử lý Arrows (Mũi tên chỉ hướng)
         arrows = raw_data.get('arrows', {})
-        if 'visual_objects' in raw_data: arrows = raw_data['visual_objects'].get('arrows', {})
         for k, v in arrows.items():
             visual_objects['arrows'][k] = {"id": k, "bbox": v.get('bbox', [0, 0, 0, 0])}
             if 'polygon' in v:
@@ -108,7 +118,11 @@ class IngestionService:
                 ys = [p[1] for p in poly]
                 visual_objects['arrows'][k]['bbox'] = [min(xs), min(ys), max(xs) - min(xs), max(ys) - min(ys)]
 
-        return {"id": image_id, "visual_objects": visual_objects, "relationships": raw_data.get('relationships', [])}
+        return {
+            "id": image_id,
+            "visual_objects": visual_objects,
+            "relationships": raw_data.get('relationships', [])
+        }
 
     async def _ingest_to_mongo(self, data):
         try:
