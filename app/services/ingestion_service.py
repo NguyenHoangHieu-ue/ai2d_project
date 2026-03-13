@@ -85,7 +85,6 @@ class IngestionService:
                 "relationships": raw_data.get('relationships', [])
             }
 
-        # Logic xử lý dành cho dữ liệu AI2D thô (cần tính toán lại tọa độ Bbox từ Polygon)
         visual_objects = {"blobs": {}, "texts": [], "arrows": {}}
 
         # 1. Xử lý Blobs (Vùng đối tượng)
