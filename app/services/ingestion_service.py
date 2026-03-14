@@ -24,19 +24,31 @@ class IngestionService:
             self.categories = {}
 
     async def process_upload(self, raw_json_content: dict, image_id: str, rst_content: dict = None):
+        # Chuẩn hóa dữ liệu đầu vào
         std_data = self._standardize_wrapper(raw_json_content, image_id)
 
-        context = get_context(image_id, self.categories, self.mapping_df)
+        # Xác định Category
+        target_category = raw_json_content.get("category")
+        lookup_categories = self.categories.copy()
+        if target_category:
+            lookup_categories[image_id] = target_category
+
+        context = get_context(image_id, lookup_categories, self.mapping_df)
+
         if not context:
+            logger.warning(f"Bỏ qua {image_id}: Category không tìm thấy.")
             return {"status": "skipped", "reason": "Category not allowed"}
 
+        # Xây dựng cấu trúc đồ thị (Nodes & Edges)
         nodes, edges = process_logic(std_data, rst_content, context)
 
+        # Sinh mô tả dựa trên cấu trúc đồ thị
         description = self._generate_description(nodes, edges, context)
 
+        # Tổng hợp dữ liệu cuối cùng
         final_payload = {
             "id": image_id,
-            "imageUrl": f"{settings.R2_BASE_URL}/ai2d/images/{image_id}",
+            "imageUrl": f"{settings.R2_BASE_URL}/ai2d/raw/{image_id}",
             "meta": context,
             "raw": std_data["visual_objects"],
             "graph": {
@@ -46,6 +58,7 @@ class IngestionService:
             "description": description
         }
 
+        # Thực hiện nạp dữ liệu song song vào 3 Database
         await asyncio.gather(
             self._ingest_to_mongo(final_payload),
             self._ingest_to_postgres(final_payload),
