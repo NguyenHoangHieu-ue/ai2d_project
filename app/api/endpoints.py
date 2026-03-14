@@ -111,7 +111,7 @@ async def get_global_graph():
                type(r) AS rel_type
         """
 
-        # 2. Category -> Diagram (Giới hạn 15 sơ đồ để không lag)
+        # 2. Category -> Diagram (Giới hạn 15 sơ đồ)
         q2 = """
         MATCH (cat:Category)<-[:BELONGS_TO]-(d:Diagram) WITH cat, d LIMIT 15
         RETURN elementId(cat) AS source_id, labels(cat)[0] AS source_label, cat.name AS source_name,
@@ -128,7 +128,7 @@ async def get_global_graph():
                'CONTAINS' AS rel_type
         """
 
-        # 4. Entity -> Entity (Vẽ câu chuyện: Egg -> Larva -> Pupa...)
+        # 4. Entity -> Entity (Vẽ Egg -> Larva -> Pupa...)
         q4 = """
         MATCH (cat:Category)<-[:BELONGS_TO]-(d:Diagram) WITH d LIMIT 15
         MATCH (d)-[:CONTAINS]->(e1:Entity)-[r]->(e2:Entity)<-[:CONTAINS]-(d)
@@ -184,7 +184,7 @@ async def get_category_graph(category_name: str):
                'CONTAINS' AS rel_type
         """
 
-        # 3. Entity -> Entity (Đúng cái Description mà bạn muốn)
+        # 3. Entity -> Entity
         q3 = """
         MATCH (cat:Category {name: $category_name})<-[:BELONGS_TO]-(d:Diagram) WITH d LIMIT 15
         MATCH (d)-[:CONTAINS]->(e1:Entity)-[r]->(e2:Entity)<-[:CONTAINS]-(d)
