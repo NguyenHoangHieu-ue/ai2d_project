@@ -1,7 +1,39 @@
 import os
+import json
 from dotenv import load_dotenv
 
 load_dotenv()
+
+
+def _normalize_origin(origin: str) -> str:
+    cleaned = origin.strip().strip('"').strip("'")
+    return cleaned[:-1] if cleaned.endswith("/") else cleaned
+
+
+def _parse_cors_allow_origins(raw_value: str) -> list[str]:
+    raw_value = (raw_value or "").strip()
+    if not raw_value:
+        return []
+
+    parsed_values: list[str]
+    if raw_value.startswith("[") and raw_value.endswith("]"):
+        try:
+            loaded = json.loads(raw_value)
+            if isinstance(loaded, list):
+                parsed_values = [str(item) for item in loaded]
+            else:
+                parsed_values = [raw_value]
+        except json.JSONDecodeError:
+            parsed_values = raw_value.split(",")
+    else:
+        parsed_values = raw_value.split(",")
+
+    normalized: list[str] = []
+    for origin in parsed_values:
+        cleaned = _normalize_origin(origin)
+        if cleaned:
+            normalized.append(cleaned)
+    return normalized
 
 
 class Settings:
@@ -25,14 +57,13 @@ class Settings:
     R2_BASE_URL = os.getenv("R2_BASE_URL", "")
 
     # CORS
-    CORS_ALLOW_ORIGINS = [
-        origin.strip()
-        for origin in os.getenv(
+    CORS_ALLOW_ORIGINS = _parse_cors_allow_origins(
+        os.getenv(
             "CORS_ALLOW_ORIGINS",
-            "http://localhost:5173,http://127.0.0.1:5173"
-        ).split(",")
-        if origin.strip()
-    ]
+            "http://localhost:5173,http://127.0.0.1:5173",
+        )
+    )
+    CORS_ALLOW_ORIGIN_REGEX = os.getenv("CORS_ALLOW_ORIGIN_REGEX", "").strip() or None
 
 
 settings = Settings()
