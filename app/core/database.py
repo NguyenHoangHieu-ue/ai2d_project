@@ -30,6 +30,12 @@ class DatabaseManager:
             self.neo4j_driver.verify_connectivity()
             print("Connected to Neo4j")
         except Exception as e:
+            if self.neo4j_driver:
+                try:
+                    self.neo4j_driver.close()
+                except Exception:
+                    pass
+            self.neo4j_driver = None
             print(f"Neo4j Connection Error: {e}")
 
         # 3. PostgreSQL

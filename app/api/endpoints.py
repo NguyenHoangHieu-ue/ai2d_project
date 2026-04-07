@@ -6,6 +6,71 @@ from app.services.ingestion_service import ingestion_service
 
 router = APIRouter()
 
+CANONICAL_CATEGORY_MAP = {
+    "lifecycles": "lifeCycles",
+    "lifecycle": "lifeCycles",
+    "life_cycles": "lifeCycles",
+    "foodchainswebs": "foodChainsWebs",
+    "foodchainwebs": "foodChainsWebs",
+    "food_chains_webs": "foodChainsWebs",
+    "foodchains": "foodChainsWebs",
+    "foodwebs": "foodChainsWebs",
+}
+
+
+def normalize_category(category: Optional[str]) -> Optional[str]:
+    if not category:
+        return None
+    cleaned = category.strip()
+    if not cleaned:
+        return None
+
+    if cleaned == "lifeCycles" or cleaned == "foodChainsWebs":
+        return cleaned
+
+    lowered = cleaned.lower().replace("-", "").replace(" ", "")
+    if lowered in {"processes", "process", "processflow", "processflows"}:
+        return None
+    return CANONICAL_CATEGORY_MAP.get(lowered, cleaned)
+
+
+def normalize_edges_for_category(graph: Optional[Dict[str, Any]], category: Optional[str]) -> Optional[Dict[str, Any]]:
+    if not graph or not isinstance(graph, dict):
+        return graph
+
+    canonical_category = normalize_category(category)
+    forced_type = None
+    if canonical_category == "foodChainsWebs":
+        forced_type = "EATS"
+    elif canonical_category == "lifeCycles":
+        forced_type = "TRANSFORME"
+
+    if not forced_type:
+        return graph
+
+    raw_edges = graph.get("edges") or []
+    normalized_edges = []
+    for edge in raw_edges:
+        if not isinstance(edge, dict):
+            normalized_edges.append(edge)
+            continue
+        new_edge = dict(edge)
+        new_edge["type"] = forced_type
+        if "label" in new_edge:
+            new_edge["label"] = forced_type
+        normalized_edges.append(new_edge)
+
+    new_graph = dict(graph)
+    new_graph["edges"] = normalized_edges
+    return new_graph
+
+
+def normalize_relation_type(relation_type: Optional[str]) -> str:
+    relation = (relation_type or "").strip().upper()
+    if relation == "DEVELOPS_TO":
+        return "TRANSFORME"
+    return relation or "RELATED_TO"
+
 @router.post("/ingest/{image_id}")
 async def ingest_ai_detected_data(image_id: str, ai_json: Dict[str, Any] = Body(...)):
     result = await ingestion_service.process_upload(
@@ -17,23 +82,25 @@ async def ingest_ai_detected_data(image_id: str, ai_json: Dict[str, Any] = Body(
 
 @router.get("/diagrams", response_model=DiagramListResponse)
 async def get_diagrams(category: Optional[str] = Query(None, description="Loc theo chu de")):
+    normalized_category = normalize_category(category)
     query = {}
-    if category:
-        query["meta.category"] = category
+    if normalized_category:
+        query["meta.category"] = normalized_category
 
     cursor = db.mongo_db["diagrams_inventory"].find(query)
     items = []
 
     async for doc in cursor:
+        doc_category = doc.get("meta", {}).get("category")
         items.append({
             "id": doc.get("id"),
             "image_url": doc.get("imageUrl"),
             "meta": {
-                "category": doc.get("meta", {}).get("category"),
+                "category": doc_category,
                 "domain": doc.get("meta", {}).get("domain"),
                 "description": doc.get("description")
             },
-            "graph": doc.get("graph"),
+            "graph": normalize_edges_for_category(doc.get("graph"), doc_category),
             "raw_data": None
         })
 
@@ -47,15 +114,16 @@ async def get_diagram_detail(diagram_id: str):
     if not doc:
         raise HTTPException(status_code=404, detail="Khong tim thay so do")
 
+    doc_category = doc.get("meta", {}).get("category")
     return {
         "id": doc.get("id"),
         "image_url": doc.get("imageUrl"),
         "meta": {
-            "category": doc.get("meta", {}).get("category"),
+            "category": doc_category,
             "domain": doc.get("meta", {}).get("domain"),
             "description": doc.get("description")
         },
-        "graph": doc.get("graph"),
+        "graph": normalize_edges_for_category(doc.get("graph"), doc_category),
         "raw_data": doc.get("raw")
     }
 
@@ -65,6 +133,7 @@ async def search_related(
         keyword: str = Query(..., description="Tu khoa tim kiem"),
         category: Optional[str] = Query(None, description="Loc theo chu de")
 ):
+    normalized_category = normalize_category(category)
     query = {
         "$or": [
             {"graph.nodes.name": {"$regex": keyword, "$options": "i"}},
@@ -72,8 +141,8 @@ async def search_related(
         ]
     }
 
-    if category:
-        query["meta.category"] = category
+    if normalized_category:
+        query["meta.category"] = normalized_category
 
     cursor = db.mongo_db["diagrams_inventory"].find(query)
     items = []
@@ -153,7 +222,9 @@ async def get_global_graph():
                             "id": t_id, "label": record["target_label"], "name": record["target_name"]
                         }
                     edges.append({
-                        "source": s_id, "target": t_id, "type": record["rel_type"]
+                        "source": s_id,
+                        "target": t_id,
+                        "type": normalize_relation_type(record.get("rel_type"))
                     })
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Graph query failed: {e}")
@@ -166,8 +237,16 @@ async def get_category_graph(category_name: str):
     if not db.neo4j_driver:
         raise HTTPException(status_code=500, detail="Neo4j khong hoat dong")
 
+    normalized_category = normalize_category(category_name)
+
     nodes_dict = {}
     edges = []
+
+    forced_edge_type = None
+    if normalized_category == "foodChainsWebs":
+        forced_edge_type = "EATS"
+    elif normalized_category == "lifeCycles":
+        forced_edge_type = "TRANSFORME"
 
     try:
         with db.neo4j_driver.session() as session:
@@ -198,7 +277,7 @@ async def get_category_graph(category_name: str):
             """
 
             for query in [q1, q2, q3]:
-                result = session.run(query, category_name=category_name)
+                result = session.run(query, category_name=normalized_category or category_name)
                 for record in result:
                     s_id = record["source_id"]
                     t_id = record["target_id"]
@@ -211,8 +290,9 @@ async def get_category_graph(category_name: str):
                         nodes_dict[t_id] = {
                             "id": t_id, "label": record["target_label"], "name": record["target_name"]
                         }
+                    rel_type = forced_edge_type or normalize_relation_type(record.get("rel_type"))
                     edges.append({
-                        "source": s_id, "target": t_id, "type": record["rel_type"]
+                        "source": s_id, "target": t_id, "type": rel_type
                     })
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Category graph query failed: {e}")
