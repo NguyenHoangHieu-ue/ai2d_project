@@ -24,5 +24,15 @@ class Settings:
     # Storage
     R2_BASE_URL = os.getenv("R2_BASE_URL", "")
 
+    # CORS
+    CORS_ALLOW_ORIGINS = [
+        origin.strip()
+        for origin in os.getenv(
+            "CORS_ALLOW_ORIGINS",
+            "http://localhost:5173,http://127.0.0.1:5173"
+        ).split(",")
+        if origin.strip()
+    ]
+
 
 settings = Settings()
