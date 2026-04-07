@@ -71,6 +71,12 @@ def normalize_relation_type(relation_type: Optional[str]) -> str:
         return "TRANSFORME"
     return relation or "RELATED_TO"
 
+
+def extract_description(doc: Dict[str, Any]) -> Optional[str]:
+    top_level = doc.get("description")
+    meta_level = (doc.get("meta") or {}).get("description")
+    return top_level or meta_level
+
 @router.post("/ingest/{image_id}")
 async def ingest_ai_detected_data(image_id: str, ai_json: Dict[str, Any] = Body(...)):
     result = await ingestion_service.process_upload(
@@ -98,7 +104,7 @@ async def get_diagrams(category: Optional[str] = Query(None, description="Loc th
             "meta": {
                 "category": doc_category,
                 "domain": doc.get("meta", {}).get("domain"),
-                "description": doc.get("description")
+                "description": extract_description(doc)
             },
             "graph": normalize_edges_for_category(doc.get("graph"), doc_category),
             "raw_data": None
@@ -121,7 +127,7 @@ async def get_diagram_detail(diagram_id: str):
         "meta": {
             "category": doc_category,
             "domain": doc.get("meta", {}).get("domain"),
-            "description": doc.get("description")
+            "description": extract_description(doc)
         },
         "graph": normalize_edges_for_category(doc.get("graph"), doc_category),
         "raw_data": doc.get("raw")
@@ -137,7 +143,8 @@ async def search_related(
     query = {
         "$or": [
             {"graph.nodes.name": {"$regex": keyword, "$options": "i"}},
-            {"description": {"$regex": keyword, "$options": "i"}}
+            {"description": {"$regex": keyword, "$options": "i"}},
+            {"meta.description": {"$regex": keyword, "$options": "i"}}
         ]
     }
 
@@ -154,7 +161,7 @@ async def search_related(
             "meta": {
                 "category": doc.get("meta", {}).get("category"),
                 "domain": doc.get("meta", {}).get("domain"),
-                "description": doc.get("description")
+                "description": extract_description(doc)
             }
         })
 
